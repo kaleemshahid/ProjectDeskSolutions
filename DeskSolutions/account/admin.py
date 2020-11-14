@@ -28,9 +28,9 @@ class ProfileAdmin(admin.ModelAdmin):
 class UserAdmin(BaseUserAdmin):
     add_form = UserModelForm
     model = User
-    # inlines = [
-    #     ProfileInline,
-    # ]
+    inlines = [
+        ProfileInline,
+    ]
 
     list_display = ('email',
                     'is_admin',)
