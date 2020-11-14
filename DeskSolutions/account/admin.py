@@ -8,21 +8,27 @@ from django.contrib.auth.models import Group, Permission
 class ProfileInline(admin.TabularInline):
     model = Profile
     formset = ProfileFormSet
-    fieldsets = (
-        (None, {'fields': ('is_manager', 'department')}),
-    )
-    add_fieldsets = (
-        ('Personal Information', {
-            'fields': ('organization_email', 'organization_name', 'department', 'is_staff', 'is_active', 'groups',)}
-         ),
-    )
+    # fieldsets = (
+    #     (None, {'fields': ('is_manager', 'department')}),
+    # )
+    # add_fieldsets = (
+    #     ('Personal Information', {
+    #         'fields': ('organization_email', 'organization_name', 'department', 'is_staff', 'is_active', 'groups',)}
+    #      ),
+    # )
+
+    def get_formset(self, request, obj=None, **kwargs):
+        print("Adasdad")
+        if obj:
+            kwargs['exclude'] = ('is_manager',)
+        return super().get_formset(request, obj, **kwargs)
 
 
-class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('is_manager',)
-    fieldsets = (
-        (None, {'fields': ('is_manager', 'department',)}),
-    )
+# class ProfileAdmin(admin.ModelAdmin):
+#     list_display = ('is_manager',)
+#     fieldsets = (
+#         (None, {'fields': ('is_manager', 'department',)}),
+#     )
 
 
 class UserAdmin(BaseUserAdmin):
@@ -31,6 +37,13 @@ class UserAdmin(BaseUserAdmin):
     inlines = [
         ProfileInline,
     ]
+
+    def get_formsets_with_inlines(self, request, obj=None):
+        for inline in self.get_inline_instances(request, obj):
+            # hide MyInline in the add view
+            # we are on change page if the below condition is TRUE
+            if obj is None or not obj.is_admin:
+                yield inline.get_formset(request, obj), inline
 
     list_display = ('email',
                     'is_admin',)
