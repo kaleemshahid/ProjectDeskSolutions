@@ -3,6 +3,7 @@ from .models import Organization, User, Department, Profile
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .forms import UserModelForm, CustomDepartmentForm, ProfileFormSet
 from django.contrib.auth.models import Group, Permission
+from django.utils.crypto import get_random_string
 
 
 class ProfileInline(admin.TabularInline):
@@ -18,10 +19,12 @@ class ProfileInline(admin.TabularInline):
     # )
 
     def get_formset(self, request, obj=None, **kwargs):
-        print("Adasdad")
         if obj:
             kwargs['exclude'] = ('is_manager',)
         return super().get_formset(request, obj, **kwargs)
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 # class ProfileAdmin(admin.ModelAdmin):
@@ -52,7 +55,7 @@ class UserAdmin(BaseUserAdmin):
     filter_horizontal = ()
 
     fieldsets = (
-        ("Information", {'fields': ('email', 'phone', 'password')}),
+        ("Information", {'fields': ('email', 'phone', 'address')}),
         ('Permissions', {'fields': ('is_staff',
                                     'is_active',)}),
     )
@@ -111,12 +114,12 @@ class UserAdmin(BaseUserAdmin):
             'description': "added_by",
             # To make char fields and text fields of a specific size
             'classes': ('wide',),
-            'fields': ('email', 'password1', 'is_staff',
+            'fields': ('email', 'phone', 'address', 'is_staff',
                        'is_active', 'groups',)}
          ),
     )
 
-    readonly_fields = ('is_staff',)
+    readonly_fields = ('is_staff', 'is_active')
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -126,7 +129,7 @@ class UserAdmin(BaseUserAdmin):
         #     return qs
         print(qs)
         print(request.user)
-        return qs.filter(id=request.user.id)
+        return qs.filter(organization_id=request.user.organization)
 
     def has_add_permission(self, request):
         if request.user.is_superuser:
@@ -134,15 +137,21 @@ class UserAdmin(BaseUserAdmin):
         return True
 
 # 9/11/2020, rat 9.16 pe isko comment kia tha meny, ku k mjy lgta tha k iski koi zrurt ni
-    # def save_model(self, request, obj, form, change):
-    #     user = request.user
-    #     obj = form.save(commit=False)
-    #     # obj.is_admin = True
-    #     if obj.email:
-    #         obj.added_by = user
-    #         obj.save()
-    #         form.save_m2m()
-    #     return obj
+    def save_model(self, request, obj, form, change):
+        user = request.user
+        obj = form.save(commit=False)
+        password = get_random_string(length=7)
+        # qs = Organization.objects.
+        print(user)
+        print(obj)
+        if obj and not change:
+            print("in here")
+            obj.organization = user.organization
+            obj.password = password
+            obj.is_admin = False
+
+        obj.save()
+        return obj
 
 
 class DepartmentAdmin(admin.ModelAdmin):
@@ -160,7 +169,7 @@ class DepartmentAdmin(admin.ModelAdmin):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
             return qs
-        return qs.filter(organization=request.user)
+        return qs.filter(user=request.user)
 
     def has_add_permission(self, request):
         if request.user.is_superuser:
@@ -180,11 +189,11 @@ class DepartmentAdmin(admin.ModelAdmin):
         user = request.user
         # if user
         obj = form.save(commit=False)
-        if not change or not obj.organization:
-            obj.organization = user
+        if not change or not obj.user:
+            obj.user = user
         # instance.modified_by = user
         obj.save()
-        form.save_m2m()
+        # form.save_m2m()
         return obj
 
     def get_form(self, request, obj=None, **kwargs):
@@ -198,5 +207,6 @@ class DepartmentAdmin(admin.ModelAdmin):
 
 
 admin.site.register(User, UserAdmin)
+admin.site.register(Organization)
 admin.site.register(Department, DepartmentAdmin)
 admin.site.register(Profile)

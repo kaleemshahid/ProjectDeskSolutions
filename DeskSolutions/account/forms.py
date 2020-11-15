@@ -9,10 +9,10 @@ from django.core.exceptions import ValidationError
 # Model form for User Registration through admin panel
 class UserModelForm(forms.ModelForm):
 
-    password1 = forms.CharField(
-        label="Password",
-        widget=forms.PasswordInput(attrs={'class': 'form-control'})
-    )
+    # password1 = forms.CharField(
+    #     label="Password",
+    #     widget=forms.PasswordInput(attrs={'class': 'form-control'})
+    # )
 
     # password2 = forms.CharField(
     #     label="Confirm Password",
@@ -21,7 +21,7 @@ class UserModelForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('email', 'organization',)
+        fields = ('email', 'organization', 'phone', 'address',)
         widgets = {
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             # 'title': forms.TextInput(attrs={'class': 'form-control'}),
@@ -40,8 +40,8 @@ class UserModelForm(forms.ModelForm):
     # def save(self, commit=True):
     #     user = super().save(commit=False)
     #     user.set_password(self.cleaned_data['password1'])
-    #     user.organization = requ
-    #     if commit:
+    #     user.organization = request.user.organization
+    #     if user:
     #         print("it happend")
     #         user.save()
     #     return user
@@ -96,7 +96,7 @@ class ProfileFormSet(BaseInlineFormSet):
     def clean(self):
         try:
             for f in self.forms:
-                print("Department Check")
+                print(f)
                 # kwargs['request'] = self.request.user
                 # print(self.request.user)
                 # if not self.request.user:
