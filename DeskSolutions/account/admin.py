@@ -9,6 +9,7 @@ from django.utils.crypto import get_random_string
 class ProfileInline(admin.TabularInline):
     model = Profile
     formset = ProfileFormSet
+    min_num = 1
     # fieldsets = (
     #     (None, {'fields': ('is_manager', 'department')}),
     # )
@@ -54,11 +55,11 @@ class UserAdmin(BaseUserAdmin):
     ordering = ('email',)
     filter_horizontal = ()
 
-    fieldsets = (
-        ("Information", {'fields': ('email', 'phone', 'address')}),
-        ('Permissions', {'fields': ('is_staff',
-                                    'is_active',)}),
-    )
+    # fieldsets = (
+    #     ("Information", {'fields': ('email', 'phone', 'address')}),
+    #     ('Permissions', {'fields': ('is_staff',
+    #                                 'is_active',)}),
+    # )
 
     # def get_user(self, obj):
     #     return obj.get_user()
@@ -83,17 +84,35 @@ class UserAdmin(BaseUserAdmin):
     #                 fields.remove(field)
     #         return fields
 
-    # def get_fieldsets(self, request, obj=None):
-    #     if not request.user.is_admin:
-    #         # print("yesss")
-    #         print(request.user.password)
-    #         fs = [(None, {'fields': ('email', 'title', 'phone', 'description', 'url', 'password', 'is_staff',
-    #                                  'is_active', 'is_manager', 'groups',)})]
-    #         exclude = ('password2',)
-    #         return fs
-    #     else:
-    #         fs = [(None, {'fields': ('email', 'title', 'phone',
-    #                                  'description', 'password')})]
+    def get_readonly_fields(self, request, obj=None):
+        if request.user.is_superuser:
+            return []
+        return self.readonly_fields
+
+    def get_fieldsets(self, request, obj=None):
+        if request.user.is_admin:
+            # print("yesss")
+            # print(request.user.password)
+            # fs = ((None, {'fields': ('email', 'title', 'phone', 'description', 'url', 'password', 'is_staff',
+            #                          'is_active', 'is_manager', 'groups',)}))
+            fs = (
+                ("Information", {'fields': ('email', 'phone', 'address')}),
+                ('Permissions', {'fields': ('is_staff',
+                                            'is_active',)}),
+            )
+
+            readonly_fields = ('is_staff', 'is_active')
+            # exclude = ('password2',)
+            return fs
+        else:
+            # fs = ((None, {'fields': ('email', 'title', 'phone',
+            #                          'description', 'password')}))
+            fs = (
+                ("Information", {'fields': ('email', 'phone', 'address')}),
+                ('Permissions', {'fields': ('is_staff',
+                                            'is_active',)}),
+            )
+            return fs
 
     # return fs
 
@@ -108,18 +127,16 @@ class UserAdmin(BaseUserAdmin):
 
     # /////// yhqn aik function bna k dekho, jo groups field ko replace kr k custom group dy
 
-    add_fieldsets = (
-        ('Personal Information', {
-            # To create a section with name 'Personal Information' with mentioned fields
-            'description': "added_by",
-            # To make char fields and text fields of a specific size
-            'classes': ('wide',),
-            'fields': ('email', 'phone', 'address', 'is_staff',
-                       'is_active', 'groups',)}
-         ),
-    )
-
-    readonly_fields = ('is_staff', 'is_active')
+    # add_fieldsets = (
+    #     ('Personal Information', {
+    #         # To create a section with name 'Personal Information' with mentioned fields
+    #         'description': "added_by",
+    #         # To make char fields and text fields of a specific size
+    #         'classes': ('wide',),
+    #         'fields': ('email', 'phone', 'address', 'is_staff',
+    #                    'is_active', 'groups',)}
+    #      ),
+    # )
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -127,14 +144,19 @@ class UserAdmin(BaseUserAdmin):
             return qs
         # elif request.user.is_admin:
         #     return qs
-        print(qs)
-        print(request.user)
+        # print(qs)
+        # print(request.user)
         return qs.filter(organization_id=request.user.organization)
 
     def has_add_permission(self, request):
         if request.user.is_superuser:
             return False
         return True
+
+    def has_delete_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        return False
 
 # 9/11/2020, rat 9.16 pe isko comment kia tha meny, ku k mjy lgta tha k iski koi zrurt ni
     def save_model(self, request, obj, form, change):
@@ -209,4 +231,4 @@ class DepartmentAdmin(admin.ModelAdmin):
 admin.site.register(User, UserAdmin)
 admin.site.register(Organization)
 admin.site.register(Department, DepartmentAdmin)
-admin.site.register(Profile)
+# admin.site.register(Profile)
