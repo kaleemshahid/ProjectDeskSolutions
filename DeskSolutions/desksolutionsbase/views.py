@@ -29,8 +29,9 @@ def OrganizationRegister(request):
             title = form.cleaned_data['title']
             description = form.cleaned_data['description']
             url = form.cleaned_data['url']
+            address = form.cleaned_data['address']
             create_organization = Organization.objects.create(
-                title=title, description=description, url=url)
+                title=title, description=description, url=url, address=address)
             create_organization.save()
             # get_org = Organization.objects.filter(
             #     title=title)

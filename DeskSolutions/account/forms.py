@@ -96,12 +96,13 @@ class ProfileFormSet(BaseInlineFormSet):
     def clean(self):
         try:
             for f in self.forms:
-                print(f)
+                # print(f)
+                department = f.cleaned_data.get('department')
+                # qs = Profile.objects.get(department=)
                 # kwargs['request'] = self.request.user
                 # print(self.request.user)
                 # if not self.request.user:
-                print(f.cleaned_data.get('department'))
-                if f.cleaned_data.get('department') is None:
+                if department is None:
                     raise ValidationError(
                         "One or more required fields is empty")
         except AttributeError:

@@ -5,7 +5,13 @@ from account.models import Organization, User, Profile
 class OrganizationForm(forms.ModelForm):
     class Meta:
         model = Organization
-        fields = ('title', 'url', 'description',)
+        fields = ('title', 'url', 'description', 'address')
+        widgets = {
+            'title': forms.EmailInput(attrs={'class': 'form-control'}),
+            'url': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
+        }
 
 
 class RegisterForm(forms.ModelForm):

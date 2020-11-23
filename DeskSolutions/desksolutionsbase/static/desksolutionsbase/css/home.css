@@ -165,6 +165,11 @@ section{
     box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
 }
 
+.signup_title{
+    background-color: aqua;
+    font-size: 40px;
+}
+
 /* Footer */
 .footer .lead{
     font-size: 14px;

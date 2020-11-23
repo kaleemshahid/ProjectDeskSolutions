@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'account.apps.AccountConfig',
     'desksolutionsbase.apps.DesksolutionsbaseConfig',
+    'TaskManagement.apps.TaskmanagementConfig',
 ]
 
 AUTH_USER_MODEL = 'account.User'

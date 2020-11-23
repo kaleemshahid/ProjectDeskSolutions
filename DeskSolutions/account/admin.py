@@ -4,6 +4,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .forms import UserModelForm, CustomDepartmentForm, ProfileFormSet
 from django.contrib.auth.models import Group, Permission
 from django.utils.crypto import get_random_string
+from django.core.exceptions import ValidationError
 
 
 class ProfileInline(admin.TabularInline):
@@ -44,7 +45,7 @@ class UserAdmin(BaseUserAdmin):
 
     def get_formsets_with_inlines(self, request, obj=None):
         for inline in self.get_inline_instances(request, obj):
-            # hide MyInline in the add view
+            # hide inline in the add view
             # we are on change page if the below condition is TRUE
             if obj is None or not obj.is_admin:
                 yield inline.get_formset(request, obj), inline
@@ -84,10 +85,19 @@ class UserAdmin(BaseUserAdmin):
     #                 fields.remove(field)
     #         return fields
 
+    # def get_readonly_fields(self, request, obj=None):
+    #     if request.user.is_superuser:
+    #         return []
+    #     return self.readonly_fields
+
     def get_readonly_fields(self, request, obj=None):
-        if request.user.is_superuser:
-            return []
-        return self.readonly_fields
+        readonly_fields = super(
+            UserAdmin, self).get_readonly_fields(request, obj)
+        if obj and obj.is_admin:  # editing an existing object
+            print("obj.is_admin is None")
+            return readonly_fields + ('is_active', 'is_staff')
+        print("obj.is_admin is not None")
+        return readonly_fields
 
     def get_fieldsets(self, request, obj=None):
         if request.user.is_admin:
@@ -101,7 +111,6 @@ class UserAdmin(BaseUserAdmin):
                                             'is_active',)}),
             )
 
-            readonly_fields = ('is_staff', 'is_active')
             # exclude = ('password2',)
             return fs
         else:
@@ -163,7 +172,6 @@ class UserAdmin(BaseUserAdmin):
         user = request.user
         obj = form.save(commit=False)
         password = get_random_string(length=7)
-        # qs = Organization.objects.
         print(user)
         print(obj)
         if obj and not change:
@@ -228,7 +236,15 @@ class DepartmentAdmin(admin.ModelAdmin):
         return DepartmentFormWithRequest
 
 
+class OrganizationAdmin(admin.ModelAdmin):
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_admin:
+            return qs.filter(user__id=request.user.id)
+        return qs
+
+
 admin.site.register(User, UserAdmin)
-admin.site.register(Organization)
+admin.site.register(Organization, OrganizationAdmin)
 admin.site.register(Department, DepartmentAdmin)
 # admin.site.register(Profile)
