@@ -23,10 +23,16 @@ class ProfileInline(admin.TabularInline):
     def get_formset(self, request, obj=None, **kwargs):
         if obj:
             kwargs['exclude'] = ('is_manager',)
+            # kwargs['readonly_fields'] = ('department',)
         return super().get_formset(request, obj, **kwargs)
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    def has_change_permission(self, request, obj=None):
+        if request.user:
+            return False
+        return True
 
 
 # class ProfileAdmin(admin.ModelAdmin):
@@ -51,10 +57,17 @@ class UserAdmin(BaseUserAdmin):
                 yield inline.get_formset(request, obj), inline
 
     list_display = ('email',
-                    'is_admin',)
-    list_filter = ('is_superuser', 'is_staff',)
+                    'is_admin', 'manager')
+    list_filter = ('is_superuser', 'is_staff', )
     ordering = ('email',)
     filter_horizontal = ()
+
+    def manager(self, obj):
+        # return "\n".join([str(p.is_manager) for p in Profile.objects.filter(organization=obj.id)])
+        q = Profile.objects.get(organization__id=obj.id)
+        return q.is_manager
+    # This would set the method type to Boolean
+    manager.boolean = True
 
     # fieldsets = (
     #     ("Information", {'fields': ('email', 'phone', 'address')}),
@@ -95,7 +108,7 @@ class UserAdmin(BaseUserAdmin):
             UserAdmin, self).get_readonly_fields(request, obj)
         if obj and obj.is_admin:  # editing an existing object
             print("obj.is_admin is None")
-            return readonly_fields + ('is_active', 'is_staff')
+            return readonly_fields + ('is_active', 'is_staff',)
         print("obj.is_admin is not None")
         return readonly_fields
 
@@ -151,16 +164,14 @@ class UserAdmin(BaseUserAdmin):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
             return qs
-        # elif request.user.is_admin:
-        #     return qs
-        # print(qs)
-        # print(request.user)
-        return qs.filter(organization_id=request.user.organization)
+        if request.user.is_admin:
+            return qs.filter(organization_id=request.user.organization)
+        return qs.filter(id=request.user.id)
 
     def has_add_permission(self, request):
-        if request.user.is_superuser:
-            return False
-        return True
+        if request.user.is_admin:
+            return True
+        return False
 
     def has_delete_permission(self, request, obj=None):
         if request.user.is_superuser:
@@ -174,14 +185,23 @@ class UserAdmin(BaseUserAdmin):
         password = get_random_string(length=7)
         print(user)
         print(obj)
+        print(password)
         if obj and not change:
-            print("in here")
             obj.organization = user.organization
-            obj.password = password
+            obj.set_password(password)
             obj.is_admin = False
 
         obj.save()
         return obj
+
+    # def get_form(self, request, obj=None, **kwargs):
+    #     UserForm = super().get_form(request, obj, **kwargs)
+
+    #     class UserFormWithRequest(UserForm):
+    #         def __new__(cls, *args, **kwargs):
+    #             kwargs['request'] = request
+    #             return UserForm(*args, **kwargs)
+    #     return UserFormWithRequest
 
 
 class DepartmentAdmin(admin.ModelAdmin):
@@ -202,14 +222,19 @@ class DepartmentAdmin(admin.ModelAdmin):
         return qs.filter(user=request.user)
 
     def has_add_permission(self, request):
-        if request.user.is_superuser:
-            return False
-        return True
+        if request.user.is_admin:
+            return True
+        return False
 
     def has_change_permission(self, request, obj=None):
         if request.user.is_superuser:
             return False
         return True
+
+    def has_view_permission(self, request, obj=None):
+        if request.user.is_admin or request.user.is_superuser:
+            return True
+        return False
 
     def save_model(self, request, obj, form, change):
         # if obj.organization:
@@ -242,6 +267,22 @@ class OrganizationAdmin(admin.ModelAdmin):
         if request.user.is_admin:
             return qs.filter(user__id=request.user.id)
         return qs
+
+    def has_view_permission(self, request, obj=None):
+        if request.user.is_admin or request.user.is_superuser:
+            return True
+        return False
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        if request.user.is_admin:
+            return True
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
 
 
 admin.site.register(User, UserAdmin)
