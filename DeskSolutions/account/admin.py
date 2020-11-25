@@ -5,6 +5,8 @@ from .forms import UserModelForm, CustomDepartmentForm, ProfileFormSet
 from django.contrib.auth.models import Group, Permission
 from django.utils.crypto import get_random_string
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
+from django.contrib import messages
 
 
 class ProfileInline(admin.TabularInline):
@@ -21,18 +23,18 @@ class ProfileInline(admin.TabularInline):
     # )
 
     def get_formset(self, request, obj=None, **kwargs):
-        if obj:
+        # if obj:
+        if obj.is_admin:
             kwargs['exclude'] = ('is_manager',)
-            # kwargs['readonly_fields'] = ('department',)
         return super().get_formset(request, obj, **kwargs)
 
     def has_delete_permission(self, request, obj=None):
         return False
 
     def has_change_permission(self, request, obj=None):
-        if request.user:
-            return False
-        return True
+        if request.user.is_admin:
+            return True
+        return False
 
 
 # class ProfileAdmin(admin.ModelAdmin):
@@ -48,6 +50,23 @@ class UserAdmin(BaseUserAdmin):
     inlines = [
         ProfileInline,
     ]
+
+    # empty_value_display = "NA"
+
+    def changelist_view(self, request, extra_context=None):
+        qs = Organization.objects.get(user__id=request.user.id)
+        depts = Department.objects.filter(user_id=request.user.id)
+        for dep in depts:
+            check_manager = Profile.objects.filter(
+                department=dep.id, is_manager=True).count()
+            # for status in check_manager:
+            # if not status.is_manager:
+            if check_manager < 1:
+                messages.warning(request, dep.department_name +
+                                 " needs action. No Manager specified for the department")
+        extra_context = {'title': qs.title}
+
+        return super(UserAdmin, self).changelist_view(request, extra_context=extra_context)
 
     def get_formsets_with_inlines(self, request, obj=None):
         for inline in self.get_inline_instances(request, obj):
@@ -68,6 +87,7 @@ class UserAdmin(BaseUserAdmin):
         return q.is_manager
     # This would set the method type to Boolean
     manager.boolean = True
+    manager.empty_value_display = "NA"
 
     # fieldsets = (
     #     ("Information", {'fields': ('email', 'phone', 'address')}),
@@ -192,6 +212,7 @@ class UserAdmin(BaseUserAdmin):
             obj.is_admin = False
 
         obj.save()
+        # send_mail('This is your passwrd', password,'noreply@desksolutions.com', [obj], fail_silently = False)
         return obj
 
     # def get_form(self, request, obj=None, **kwargs):

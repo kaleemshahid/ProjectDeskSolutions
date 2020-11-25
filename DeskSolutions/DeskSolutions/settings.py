@@ -47,6 +47,12 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = 'account.User'
 GROUP_ALLOCATE = "OrganizationAdministrators"
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'noreply@desksolutions.com'
+EMAIL_HOST_PASSWORD = 'Project2020'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
