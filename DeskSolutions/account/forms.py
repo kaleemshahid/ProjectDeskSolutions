@@ -4,11 +4,15 @@ from django.contrib.auth.forms import UserCreationForm
 from django.forms.models import BaseInlineFormSet
 from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
+from django.utils.crypto import get_random_string
 
 
 # Model form for User Registration through admin panel
 class UserModelForm(forms.ModelForm):
 
+    # def __init__(self, *args, **kwargs):
+    #     self.request = kwargs.pop('request', None)
+    #     super().__init__(*args, **kwargs)
     # password1 = forms.CharField(
     #     label="Password",
     #     widget=forms.PasswordInput(attrs={'class': 'form-control'})
@@ -39,8 +43,11 @@ class UserModelForm(forms.ModelForm):
 
     # def save(self, commit=True):
     #     user = super().save(commit=False)
-    #     user.set_password(self.cleaned_data['password1'])
-    #     user.organization = request.user.organization
+    #     cpassword = get_random_string(length=7)
+    #     user.set_password(cpassword)
+    #     # user.set_password(self.cleaned_data['password1'])
+    #     user.organization = self.request.user.organization
+    #     user.is_admin = False
     #     if user:
     #         print("it happend")
     #         user.save()
@@ -96,14 +103,21 @@ class ProfileFormSet(BaseInlineFormSet):
     def clean(self):
         try:
             for f in self.forms:
-                # print(f)
                 department = f.cleaned_data.get('department')
-                # qs = Profile.objects.get(department=)
-                # kwargs['request'] = self.request.user
-                # print(self.request.user)
-                # if not self.request.user:
+                get_status = f.cleaned_data.get('is_manager')
+                get_user = f.cleaned_data.get('organization_id')
+                print(department.id)
+                print(get_status)
+                print(get_user)
+                qs = Profile.objects.filter(
+                    department=department.id, is_manager=True).count()
+
                 if department is None:
                     raise ValidationError(
                         "One or more required fields is empty")
+                if get_status:
+                    if qs > 0:
+                        raise ValidationError(
+                            "A manager has already been allocated to selected Department")
         except AttributeError:
             pass
