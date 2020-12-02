@@ -3,12 +3,12 @@
     <div class="container register-container">
         <div class="col-offset-3 col-md-6" style="border: 1px solid black">
             <div class="signup_title">Sign Up</div>
-            <form method="POST" action="" id="signup-form" novalidate>
+            <form method="POST" action="" id="signup-form" enctype="multipart/form-data" novalidate>
                 {% csrf_token %}
 
                 {% for field in register_form %}
                 {{ field.label_tag }}
-                {{ field }}
+                <p>{{ field }}</p>
 
                 <!-- {% for error in field.errors %}
                 <p style=" color: red;">{{error}}</p>

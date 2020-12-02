@@ -11,28 +11,30 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 
 
-def home(request):
-    return render(request, "desksolutions/base.html")
-
-
-def OrganizationRegister(request):
+def OrganizationAction(request):
     context = {}
+
     if request.method == "POST" and request.is_ajax():
         print("request is POST")
-        form = OrganizationForm(request.POST or None)
-        # print(form)
+        form = OrganizationForm(request.POST, request.FILES)
+        print(settings.BASE_DIR)
+        print(settings.MEDIA_ROOT)
         if form.is_valid():
             print("Organization Form is Valid")
 
             # org = form.save()
             # print(org)
-            title = form.cleaned_data['title']
-            description = form.cleaned_data['description']
-            url = form.cleaned_data['url']
-            address = form.cleaned_data['address']
-            create_organization = Organization.objects.create(
-                title=title, description=description, url=url, address=address)
-            create_organization.save()
+            # title = form.cleaned_data['title']
+            # description = form.cleaned_data['description']
+            # url = form.cleaned_data['url']
+            # address = form.cleaned_data['address']
+            # logo = request.FILES.get('logo')
+            # print(address)
+            # print(logo)
+            # create_organization = Organization.objects.create(
+            #     title=title, description=description, url=url, address=address, logo=logo)
+            # create_organization.save()
+            form.save()
             # get_org = Organization.objects.filter(
             #     title=title)
             # print(get_org)
@@ -45,9 +47,9 @@ def OrganizationRegister(request):
             # print(ser_instance)
             # ser_instance = json.dumps(get_org, content_type='application/json')
             # print(ser_instance)
-            request.session['organization'] = create_organization.id
+            # request.session['organization'] = create_organization.pk
             # print(ser_instance)
-            print(request.session['organization'])
+            # print(request.session['organization'])
             # form.save()
             # return redirect("signup:signups", args=(request.session['organization'],))
             # return redirect('signups')
@@ -58,6 +60,9 @@ def OrganizationRegister(request):
             # context['register_form'] = form
             context['register_form'] = form.errors
             return JsonResponse(context)
+            # print(form.errors)
+            # print(JsonResponse(context))
+            # return JsonResponse(context)
     else:
         form = OrganizationForm()
         context['register_form'] = form
@@ -124,3 +129,10 @@ def signup(request):
             context['user_form'] = user_form
 
         return render(request, 'desksolutionsbase/register.html', context)
+
+
+def organizationlist(request):
+    context = {}
+    organizations = Organization.objects.all()
+    context['orgs'] = organizations
+    return render(request, "desksolutionsbase/base.html", context)

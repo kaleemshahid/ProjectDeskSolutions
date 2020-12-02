@@ -5,12 +5,13 @@ from account.models import Organization, User, Profile
 class OrganizationForm(forms.ModelForm):
     class Meta:
         model = Organization
-        fields = ('title', 'url', 'description', 'address')
+        fields = ('title', 'url', 'description', 'address', 'logo')
         widgets = {
             'title': forms.EmailInput(attrs={'class': 'form-control'}),
             'url': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control'}),
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
+            # 'logo': forms.FileField(allow_empty_file=True),
         }
 
 

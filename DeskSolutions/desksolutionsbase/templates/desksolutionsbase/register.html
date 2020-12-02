@@ -3,7 +3,8 @@
     <div class="container register-container">
         <div class="col-offset-3 col-md-6">
             <div id="success-message"></div>
-            <form method="POST" action="{% url 'signup:signups' %}" id="register-form" novalidate>
+            <form method="POST" action="{% url 'signup:signups' %}" id="register-form" enctype="multipart/form-data"
+                novalidate>
                 {% csrf_token %}
 
                 {% for field in user_form %}

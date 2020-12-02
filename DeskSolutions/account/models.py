@@ -14,6 +14,7 @@ class Organization(models.Model):
     url = models.URLField(verbose_name="Organization URL",
                           null=True, blank=True, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
+    logo = models.ImageField(upload_to="logos", default=None)
     address = models.TextField(
         verbose_name="Organization Address", null=True, blank=False)
 

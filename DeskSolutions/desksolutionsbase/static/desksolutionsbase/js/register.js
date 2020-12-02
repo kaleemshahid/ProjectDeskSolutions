@@ -38,7 +38,7 @@ $(document).ready(function () {
         $('.errorlist').remove();
     }
 
-    $("#form_errors").hide()
+    $("#form_error").hide()
 
     $("#register-form").submit(function (e) {
         e.preventDefault()
@@ -57,11 +57,12 @@ $(document).ready(function () {
             // },
             data: $(form).serialize(),
             success: function (response) {
+                console.log("success")
                 $("#form_ajax").show();
                 setTimeout(function () {
                     $("#form_ajax").hide();
                 }, 5000);
-                var form_msg = response['form']
+                var form_msg = response['err_form']
                 if (form_msg) {
 
                     for (var i in form_msg) {
@@ -69,7 +70,8 @@ $(document).ready(function () {
                         var id = '#id_' + i
                         $(id).parent('p').append(form_msg[i])
                         $(id).addClass('ss');
-                        $("#form-errors").show(form_msg[i])
+                        $('#form_error').innerHTML(form_msg[i])
+                        $("#form_error").show()
 
                         // $("#form_errors").text(error_message)
                         console.log(form_msg[i])
